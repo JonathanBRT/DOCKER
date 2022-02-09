@@ -1,0 +1,51 @@
+version: '3.9'
+#Script permettant l'installation d'un serveur Wordpress avec Base de données
+
+services:
+  wp:
+    image: wordpress:latest #Le script va chercher l'image Wordpress en derniere version
+    ports:
+      - "80:80" #Port d'écoute du service Wordpress
+    volumes:
+      - ./config/php.conf.ini:/usr/local/etc/php/conf.d/conf.ini
+      - ./wp-app:/var/www/html # Ou va ce situé les dossier de tout le wordpress et la conf
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: "DB_PRIM"
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: "Admin123!Admin"
+    depends_on:
+      - db #Le service dépend le l'host db
+    links: #Sevice lié au service de Base de données
+      - db
+
+  wpcli:
+    image: wordpress:cli #Gestion en ligne de commande de wordpress
+    volumes:
+      - ./config/php.conf.ini:/usr/local/etc/php/conf.d/conf.ini
+      - ./wp-app:/var/www/html
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: "DB_SEC"
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: "Admin123!Admin"
+    depends_on: #dépendance des services
+      - db
+      - wp
+
+  db:
+    image: mysql:latest # Image MySQL : service de base de données
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./wp-data:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: "DB_PROD"
+      #creation des différents users de connexion
+      MYSQL_ROOT_PASSWORD: "Admin123!Admin"
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user123
+
+volumes:
+  db_data:
